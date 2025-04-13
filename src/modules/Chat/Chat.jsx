@@ -1,6 +1,7 @@
 import gemini from '../../services/gemini';
 import google from '../../services/google';
 import React, { useEffect, useState, useRef } from 'react';
+import { dialog, translate } from './Chat.constants';
 import { PiMicrophoneDuotone, PiMicrophoneSlashDuotone } from 'react-icons/pi';
 import SpeechRecognition, {
   useSpeechRecognition
@@ -19,6 +20,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [language, setLanguage] = useState('pt-BR');
+  const [promptName, setPromptName] = useState('dialog');
   const [isManuallyListening, setIsManuallyListening] = useState(false);
 
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
@@ -36,6 +38,12 @@ const Chat = () => {
     stopListening();
     resetTranscript();
     setLanguage(prev => (prev === 'pt-BR' ? 'en-US' : 'pt-BR'));
+  };
+
+  const togglePromptName = () => {
+    stopListening();
+    resetTranscript();
+    setPromptName(prev => (prev === 'dialog' ? 'translate' : 'dialog'));
   };
 
   const startListening = () => {
@@ -71,13 +79,16 @@ const Chat = () => {
       )
       .join('\n');
 
-    const prompt = `You are a friendly person practicing English with someone who speaks Portuguese. Respond only in English, like a natural conversation between two people. Do not use special characters like quotation marks or asterisks. Punctuation like commas and question marks is okay.\n\nThe conversation so far:\n${formattedConversation}\n\nYou:`;
+    const formattedPrompt =
+      promptName === 'dialog'
+        ? `${dialog}.\n\nThe conversation so far:\n${formattedConversation}\n\nYou:`
+        : `${translate}.\n${transcript}`;
 
     setMessages(updatedMessages);
     setIsLoading(true);
 
     gemini
-      .sendMessage(prompt)
+      .sendMessage(formattedPrompt)
       .then(({ data }) => {
         const aiResponse =
           data.candidates?.[0]?.content?.parts?.[0]?.text ||
@@ -136,19 +147,29 @@ const Chat = () => {
           />
         }
         borderWidth={3}
-        borderColor={listening ? 'blue.500' : 'transparent'}
+        borderColor={listening ? 'green.500' : 'transparent'}
         onClick={handleClickAudioButton}
       />
-      <Button
-        mb={2}
-        size="sm"
-        w="100px"
-        fontSize="sm"
-        rounded="full"
-        alignSelf="center"
-        onClick={toggleLanguage}>
-        {language}
-      </Button>
+      <ButtonGroup alignSelf="center">
+        <Button
+          mb={2}
+          size="sm"
+          w="100px"
+          fontSize="sm"
+          rounded="full"
+          onClick={toggleLanguage}>
+          {language}
+        </Button>
+        <Button
+          mb={2}
+          size="sm"
+          w="100px"
+          fontSize="sm"
+          rounded="full"
+          onClick={togglePromptName}>
+          {promptName}
+        </Button>
+      </ButtonGroup>
       {transcript && (
         <Stack borderWidth={1} rounded="xl" spacing={4} p={3}>
           <Text>{transcript}</Text>
@@ -160,6 +181,8 @@ const Chat = () => {
               flex={1}
               size="sm"
               rounded="full"
+              color="black"
+              bg="green.400"
               colorScheme="green"
               onClick={sendToGemini}>
               Confirm
@@ -175,27 +198,33 @@ const Chat = () => {
           rounded="xl"
           p={3}
           spacing={3}>
-          {messages.map((msg, i) => (
-            <Box
-              key={i}
-              alignSelf={msg.role === 'user' ? 'flex-end' : 'flex-start'}
-              bg={msg.role === 'user' ? 'blue.100' : 'gray.100'}
-              px={4}
-              py={2}
-              borderRadius="lg"
-              maxW="80%">
-              <Text fontSize="sm" color="blackAlpha.800">
-                {msg.text}
-              </Text>
-            </Box>
-          ))}
+          {messages.map((msg, i) => {
+            const isUser = msg.role === 'user';
+            return (
+              <Box
+                px={4}
+                py={2}
+                key={i}
+                alignSelf={isUser ? 'flex-end' : 'flex-start'}
+                bg={isUser ? 'green.300' : 'gray.100'}
+                rounded="lg"
+                roundedTopLeft={isUser ? 'lg' : 'none'}
+                roundedTopRight={isUser ? 'none' : 'lg'}
+                maxW="80%">
+                <Text fontSize="sm" color="blackAlpha.800">
+                  {msg.text}
+                </Text>
+              </Box>
+            );
+          })}
           {isLoading && (
             <Box
               alignSelf="flex-start"
               bg="gray.100"
               px={4}
               py={2}
-              borderRadius="lg"
+              rounded="lg"
+              roundedTopLeft="none"
               maxW="80%">
               <Text fontSize="sm" color="blackAlpha.800">
                 ...

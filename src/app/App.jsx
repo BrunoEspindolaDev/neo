@@ -1,13 +1,15 @@
 import Chat from '../modules/Chat';
-import { Center, Stack } from '@chakra-ui/react';
+import logo from '../assets/logo_complete.png';
+import { Image, Stack } from '@chakra-ui/react';
 
 const App = () => {
   return (
-    <Center w="100vw" h="100dvh" p={6}>
-      <Stack flex={1} w="100%" maxW="500px" h="700px">
+    <Stack align="center" w="100vw" h="100dvh" p={6}>
+      <Stack w="100%" maxW="450px" h="700px">
+        <Image src={logo} w="100px" h="auto" mb={10} />
         <Chat />
       </Stack>
-    </Center>
+    </Stack>
   );
 };
 
