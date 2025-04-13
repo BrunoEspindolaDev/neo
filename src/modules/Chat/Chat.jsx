@@ -1,4 +1,5 @@
 import gemini from '../../services/gemini';
+import google from '../../services/google';
 import React, { useEffect, useState, useRef } from 'react';
 import { PiMicrophoneDuotone, PiMicrophoneSlashDuotone } from 'react-icons/pi';
 import SpeechRecognition, {
@@ -6,7 +7,6 @@ import SpeechRecognition, {
 } from 'react-speech-recognition';
 import {
   Button,
-  Center,
   Icon,
   IconButton,
   Stack,
@@ -48,26 +48,15 @@ const Chat = () => {
     SpeechRecognition.stopListening();
   };
 
-  const speak = text => {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    const voices = window.speechSynthesis.getVoices();
-    const femaleVoice = voices.find(
-      v =>
-        v.lang === 'en-US' &&
-        (v.name.toLowerCase().includes('female') ||
-          v.name.toLowerCase().includes('woman') ||
-          v.name.toLowerCase().includes('google') ||
-          v.name.toLowerCase().includes('samantha'))
-    );
-
-    utterance.voice = femaleVoice || voices[0];
-    window.speechSynthesis.speak(utterance);
+  const speak = async text => {
+    google
+      .textToSpeech(text)
+      .then(({ data }) => {
+        const audioContent = data.audioContent;
+        const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+        audio.play();
+      })
+      .catch(() => console.error('Failed to synthesize speech'));
   };
 
   const sendToGemini = async () => {
