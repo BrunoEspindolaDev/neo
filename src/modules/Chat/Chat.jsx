@@ -1,7 +1,7 @@
 import gemini from '../../services/gemini';
 import google from '../../services/google';
 import React, { useEffect, useState, useRef } from 'react';
-import { dialog, translate } from './Chat.constants';
+import { dialogWithErrorDetector, translate } from './Chat.constants';
 import { PiMicrophoneDuotone, PiMicrophoneSlashDuotone } from 'react-icons/pi';
 import SpeechRecognition, {
   useSpeechRecognition
@@ -81,7 +81,7 @@ const Chat = () => {
 
     const formattedPrompt =
       promptName === 'dialog'
-        ? `${dialog}.\n\nThe conversation so far:\n${formattedConversation}\n\nYou:`
+        ? `${dialogWithErrorDetector}.\n\nThe conversation so far:\n${formattedConversation}\n\nYou:`
         : `${translate}.\n${transcript}`;
 
     setMessages(updatedMessages);
