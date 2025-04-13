@@ -1,5 +1,5 @@
 import gemini from '../../services/gemini';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { PiMicrophoneDuotone, PiMicrophoneSlashDuotone } from 'react-icons/pi';
 import SpeechRecognition, {
   useSpeechRecognition
@@ -22,6 +22,15 @@ const Chat = () => {
   const [isManuallyListening, setIsManuallyListening] = useState(false);
 
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   const toggleLanguage = () => {
     stopListening();
@@ -123,7 +132,7 @@ const Chat = () => {
   }
 
   return (
-    <Stack flex={1} spacing={4}>
+    <Stack flex={1} spacing={4} overflow="hidden">
       <IconButton
         w="120px"
         h="120px"
@@ -142,7 +151,7 @@ const Chat = () => {
         onClick={handleClickAudioButton}
       />
       <Button
-        mb={4}
+        mb={2}
         size="sm"
         w="100px"
         fontSize="sm"
@@ -171,7 +180,7 @@ const Chat = () => {
       )}
       {messages.length > 0 && (
         <Stack
-          maxH="300px"
+          flex={1}
           overflowY="auto"
           borderWidth={1}
           rounded="xl"
@@ -204,6 +213,7 @@ const Chat = () => {
               </Text>
             </Box>
           )}
+          <div ref={messagesEndRef} />
         </Stack>
       )}
     </Stack>
