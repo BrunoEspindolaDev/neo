@@ -13,12 +13,14 @@ import {
   Stack,
   Text,
   Box,
-  ButtonGroup
+  ButtonGroup,
+  Textarea
 } from '@chakra-ui/react';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [input, setInput] = useState('');
   const [language, setLanguage] = useState('pt-BR');
   const [promptName, setPromptName] = useState('dialog');
   const [isManuallyListening, setIsManuallyListening] = useState(false);
@@ -35,8 +37,6 @@ const Chat = () => {
   }, [messages, isLoading]);
 
   const toggleLanguage = () => {
-    stopListening();
-    resetTranscript();
     setLanguage(prev => (prev === 'pt-BR' ? 'en-US' : 'pt-BR'));
   };
 
@@ -68,9 +68,9 @@ const Chat = () => {
   };
 
   const sendToGemini = async () => {
-    if (!transcript) return;
+    if (!input) return;
 
-    const updatedMessages = [...messages, { role: 'user', text: transcript }];
+    const updatedMessages = [...messages, { role: 'user', text: input }];
     resetTranscript();
 
     const formattedConversation = updatedMessages
@@ -82,7 +82,7 @@ const Chat = () => {
     const formattedPrompt =
       promptName === 'dialog'
         ? `${dialogWithErrorDetector}.\n\nThe conversation so far:\n${formattedConversation}\n\nYou:`
-        : `${translate}.\n${transcript}`;
+        : `${translate}.\n${input}`;
 
     setMessages(updatedMessages);
     setIsLoading(true);
@@ -126,6 +126,10 @@ const Chat = () => {
       window.speechSynthesis.getVoices();
     };
   }, []);
+
+  useEffect(() => {
+    setInput(transcript);
+  }, [transcript]);
 
   if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
     return <p>Your browser does not support speech recognition</p>;
@@ -172,7 +176,14 @@ const Chat = () => {
       </ButtonGroup>
       {transcript && (
         <Stack borderWidth={1} rounded="xl" spacing={4} p={3}>
-          <Text>{transcript}</Text>
+          <Textarea
+            border="none"
+            outline={{ outline: 'none' }}
+            _focus={{ outline: 'none', border: 'none', shadow: 'none' }}
+            _active={{ outline: 'none', border: 'none', shadow: 'none' }}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+          />
           <ButtonGroup>
             <Button flex={1} size="sm" rounded="full" onClick={resetTranscript}>
               Clear
